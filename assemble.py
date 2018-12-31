@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import re
 
 class Y86Assmbler:
 
@@ -88,6 +89,14 @@ class Y86Assmbler:
             "pushq": 2,
             "popq": 2
         }
+
+        # length of data word
+        self.byteSize = {
+            '.quad': 8,
+            '.long': 4,
+            '.word': 2,
+            '.byte': 1 
+        }
     
     # little endian conversion
     def lEndianStr(self, x, len):
@@ -115,4 +124,74 @@ class Y86Assmbler:
             print('E: Cannot open input file: ',inFile)
             sys.exit(1)
 
-            # TODO: build 2 pass assembler from here
+        lineCount = 0
+        binCount = 0
+        lineToken = []
+        error = ''
+        labels = {}
+        yasLineNo = {}
+        chompLine = {}
+        alignment = 0
+
+        # pass 1: label detection and error detection
+        for lines in fin:
+            lineCount += 1
+            lineToken.append(lines)
+            lines = re.sub(r'#.*$','',lines)
+            lines = re.sub(r'/\*.*\*/','',lines)
+            lines = re.sub(r'\s*,\s*',',',lines)
+            if lines.find(':') != -1:
+                lab = re.compile('([^\s]+):')
+                labmatch = lab.search(lines)
+                lines= lab.sub('',lines)
+                if labmatch != None:
+                    labelname = labmatch.group(1)
+                else:
+                    error += 'Line %d: %s\n' % (lineCount, 'Label error.')
+                    continue
+                if labelname in labels:
+                    error += 'Line %d: %s\n' % (lineCount, 'Label repeated error.')
+                    continue
+                else:
+                    labels[labelname] = binCount
+                    yasLineNo[lineCount] = binCount
+                lineList = []
+                for ele in lines.split(' '):
+                    e = ele.replace('\t','').replace('\n','').replace('\r','')
+                    if e != '':
+                        lineList.append(e)
+                if lineList == []:
+                    continue
+                posIndex = str(lineCount)
+                chompLine[posIndex] = lineList
+                try:
+                    if lineList[0] in self.instByte:
+                        alignment = 0
+                        yasLineNo[lineCount] = binCount
+                        binCount += self.instByte[lineList[0]]
+                    elif lineList[0] == '.pos':
+                        binCount = int(lineCount[1],0)
+                        yasLineNo[lineCount] = binCount
+                    elif lineList[0] == '.align':
+                        alignment = int(lineCount[1],0)
+                        if binCount % alignment != 0:
+                            binCount += alignment - binCount % alignment
+                        yasLineNo[lineCount] = binCount
+                    elif lineList[0] in self.byteSize:
+                        yasLineNo[lineCount] = binCount
+                        if alignment != 0:
+                            binCount += alignment
+                        else:
+                            binCount += self.byteSize[lineList[0]]
+                    else:
+                        error += 'Line %d: Instruction "%s" not defined.\n' % (lineCount, lineList[0])
+                        continue
+                except:
+                    error += 'Line %d: Instruction error.\n' % lineCount
+                    continue
+            try:
+                fin.close()
+            except IOError:
+                pass
+            if error != '':
+                self.printError(error)
