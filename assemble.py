@@ -189,9 +189,12 @@ class Y86Assmbler:
                 except:
                     error += 'Line %d: Instruction error.\n' % lineCount
                     continue
-            try:
-                fin.close()
-            except IOError:
-                pass
-            if error != '':
-                self.printError(error)
+        try:
+            fin.close()
+        except IOError:
+            pass
+        if error != '':
+            self.printError(error)
+
+        # pass 2: generate object code
+        
