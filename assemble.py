@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
-class YAssmbler:
+import sys
+
+class Y86Assmbler:
+
+    # initalization
     def __init__(self):
+
+        # registers
         self.regs = {
             "%rax": "0",
             "%rcx": "1",
@@ -20,6 +26,8 @@ class YAssmbler:
             "%r14": "E",
             "nor": "F"
         }
+
+        # opcodes value
         self.instOpCode = {
             "halt": "00",
             "nop": "10",
@@ -49,6 +57,8 @@ class YAssmbler:
             "pushq": "A0",
             "popq": "B0"
         }
+
+        # instruction size
         self.instByte = {
             "halt": 1,
             "nop": 1,
@@ -79,6 +89,7 @@ class YAssmbler:
             "popq": 2
         }
     
+    # little endian conversion
     def lEndianStr(self, x, len):
         s = ''
         nlen = 0
@@ -91,4 +102,17 @@ class YAssmbler:
             nlen +=1
         return s
     
-    
+    # error message display
+    def printError(self, error):
+        print("E: Assembly failed: ",error)
+        sys.exit(1)
+
+    # assembling Y86 code
+    def assemble(self,inFile):
+        try:
+            fin = open(inFile)
+        except IOError:
+            print('E: Cannot open input file: ',inFile)
+            sys.exit(1)
+
+            # TODO: build 2 pass assembler from here
