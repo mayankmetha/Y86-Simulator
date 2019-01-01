@@ -2,6 +2,7 @@
 
 import sys
 import re
+import os
 
 class Y86Assmbler:
 
@@ -113,7 +114,7 @@ class Y86Assmbler:
     
     # error message display
     def printError(self, error):
-        print("E: Assembly failed: ",error)
+        print("E: Assembly failed:\n%s" % error)
         sys.exit(1)
 
     # assembling Y86 code
@@ -121,7 +122,7 @@ class Y86Assmbler:
         try:
             fin = open(inFile)
         except IOError:
-            print('E: Cannot open input file: ',inFile)
+            print('E: Cannot open input file:%s' % inFile)
             sys.exit(1)
 
         lineCount = 0
@@ -155,41 +156,40 @@ class Y86Assmbler:
                 else:
                     labels[labelname] = binCount
                     yasLineNo[lineCount] = binCount
-                lineList = []
-                for ele in lines.split(' '):
-                    e = ele.replace('\t','').replace('\n','').replace('\r','')
-                    if e != '':
-                        lineList.append(e)
-                if lineList == []:
-                    continue
-                posIndex = str(lineCount)
-                chompLine[posIndex] = lineList
-                try:
-                    if lineList[0] in self.instByte:
-                        alignment = 0
-                        yasLineNo[lineCount] = binCount
-                        binCount += self.instByte[lineList[0]]
-                    elif lineList[0] == '.pos':
-                        binCount = int(lineCount[1],0)
-                        yasLineNo[lineCount] = binCount
-                    elif lineList[0] == '.align':
-                        alignment = int(lineCount[1],0)
-                        if binCount % alignment != 0:
-                            binCount += alignment - binCount % alignment
-                        yasLineNo[lineCount] = binCount
-                    elif lineList[0] in self.byteSize:
-                        yasLineNo[lineCount] = binCount
-                        if alignment != 0:
-                            binCount += alignment
-                        else:
-                            binCount += self.byteSize[lineList[0]]
+            lineList = []
+            for ele in lines.split(' '):
+                e = ele.replace('\t','').replace('\n','').replace('\r','')
+                if e != '':
+                    lineList.append(e)
+            if lineList == []:
+                continue
+            chompLine[lineCount] = lineList
+            try:
+                if lineList[0] in self.instByte:
+                    alignment = 0
+                    yasLineNo[lineCount] = binCount
+                    binCount += self.instByte[lineList[0]]
+                elif lineList[0] == '.pos':
+                    binCount = int(lineCount[1],0)
+                    yasLineNo[lineCount] = binCount
+                elif lineList[0] == '.align':
+                    alignment = int(lineCount[1],0)
+                    if binCount % alignment != 0:
+                        binCount += alignment - binCount % alignment
+                    yasLineNo[lineCount] = binCount
+                elif lineList[0] in self.byteSize:
+                    yasLineNo[lineCount] = binCount
+                    if alignment != 0:
+                        binCount += alignment
                     else:
-                        error += 'Line %d: Instruction "%s" not defined.\n' % (lineCount, lineList[0])
-                        continue
-                except:
-                    error += 'Line %d: Instruction error.\n' % lineCount
+                        binCount += self.byteSize[lineList[0]]
+                else:
+                    error += 'Line %d: Instruction "%s" not defined.\n' % (lineCount, lineList[0])
                     continue
-        
+            except:
+                error += 'Line %d: Instruction error.\n' % lineCount
+                continue
+    
         try:
             fin.close()
         except IOError:
@@ -199,7 +199,6 @@ class Y86Assmbler:
             self.printError(error)
 
         yasObj= {}
-
         # pass 2: generate object code
         for l in chompLine:
             try:
@@ -227,14 +226,14 @@ class Y86Assmbler:
                             resBin += self.lEndianStr(labels[lineList[1]],8)
                         else:
                             res += self.lEndianStr(int(lineList[1],0),8)
-                    elif lineList == 'irmovq':
+                    elif lineList[0] == 'irmovq':
                         regList = lineList[1].split(",")
                         if regList[0] in labels:
                             addr = self.lEndianStr(labels[regList[0]],8)
                         else:
                             addr = self.lEndianStr(int(regList[0].replace('$',''),0),8)
                         resBin = self.instOpCode[lineList[0]] + self.regs['nor'] + self.regs[regList[1]] + addr
-                    elif lineList[0].endswith("movq"):
+                    elif lineList[0] in ('rmmovq', 'mrmovq'):
                         regList = lineList[1].split(",")
                         if lineList[0] == 'rmmovq':
                             memStr = regList[1]
@@ -247,7 +246,7 @@ class Y86Assmbler:
                         memInt = regex.sub('', memStr)
                         if memInt == '' or memInt == None:
                             memInt = '0'
-                        resBin = self.instOpCode[lineList[0]] + self.regs[self.reg] + self.regs[regmatch.group(1)] +self.lEndianStr(int(memStr,0),8)
+                        resBin = self.instOpCode[lineList[0]] + self.regs[self.reg] + self.regs[regmatch.group(1)] +self.lEndianStr(int(memInt,0),8)
                     else:
                         error += 'Line %d: Instruction "%s" not defined.\n' % (lineCount, lineList[0])
                         continue
@@ -281,3 +280,38 @@ class Y86Assmbler:
         # output to .yo file
         lineCount = 0
         binCount = 0
+        maxaddrlen = 3
+        if error != '':
+            self.printError(error)
+        else:
+            outFile = os.path.splitext(inFile)[0] + '.yo'
+            try:
+                fout = open(outFile,'w')
+            except IOError:
+                print('Error: cannot create output file')
+                sys.exit(1)
+            for line in lineToken:
+                lineCount += 1
+                if(lineCount in yasObj) and (lineCount in yasLineNo):
+                    ystr = yasObj[lineCount]
+                    nowaddr = yasLineNo[lineCount]
+                    binCount += len(ystr)//2
+                    fout.write('  0x%.*x: %-20s | %s' % (maxaddrlen, nowaddr, ystr, line))
+                elif lineCount in yasLineNo:
+                    nowaddr = yasLineNo[lineCount]
+                    fout.write('  0x%.*x:                      | %s' % (maxaddrlen, nowaddr, line))
+                else:
+                    fout.write((' ' * (maxaddrlen + 27)) + '| %s' % line)
+            try:
+                fout.close()
+            except IOError:
+                pass
+            print('Assembled file: %s' % os.path.basename(inFile))
+
+# main
+def main():
+    obj = Y86Assmbler()
+    obj.assemble(sys.argv[1])
+
+if __name__ == '__main__':
+    main()

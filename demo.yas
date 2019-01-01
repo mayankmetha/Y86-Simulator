@@ -1,0 +1,15 @@
+len:
+    irmovq $1, %r8              # Constant 1
+    irmovq $8, %r9              # Constant 8
+    irmovq $0, %rax             # len = 0
+    mrmovq (%rdi), %rdx         # val = *a
+    andq %rdx, %rdx             # Test val
+    je Done                     # If zero, goto Done
+Loop:
+    addq %r8, %rax              # len++
+    addq %r9, %rdi              # a++
+    mrmovq (%rdi), %rdx         # val = *a
+    andq %rdx, %rdx             # Test val
+    jne Loop                    # If !0, goto Loop
+Done: 
+    ret
