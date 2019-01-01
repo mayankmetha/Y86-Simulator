@@ -126,7 +126,7 @@ class Y86Assmbler:
             sys.exit(1)
 
         lineCount = 0
-        binCount = 0
+        binCount = 0x1000
         lineToken = []
         error = ''
         labels = {}
@@ -280,7 +280,7 @@ class Y86Assmbler:
         # output to .yo file
         lineCount = 0
         binCount = 0
-        maxaddrlen = 3
+        maxaddrlen = 4
         if error != '':
             self.printError(error)
         else:
