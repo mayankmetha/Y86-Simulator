@@ -198,5 +198,86 @@ class Y86Assmbler:
         if error != '':
             self.printError(error)
 
+        yasObj= {}
+
         # pass 2: generate object code
-        
+        for l in chompLine:
+            try:
+                lineCount = int(l)
+            except:
+                print('E: unexpected internal error')
+                sys.exit(1)
+            lineList = chompLine[l]
+            if lineList == []:
+                continue
+            resBin = ''
+            if lineList[0] in self.instOpCode:
+                alignment = 0
+                try:
+                    if lineList[0] in ('nop', 'halt', 'ret'):
+                        resBin = self.instOpCode[lineList[0]]
+                    elif lineList[0] in ('pushq', 'popq'):
+                        resBin = self.instOpCode[lineList[0]] + self.regs[lineList[1]] + self.regs["nor"]
+                    elif lineList[0] in ('addq', 'subq', 'andq', 'xorq', 'rrmovq') or lineList[0].startswith('cmov'):
+                        regList = lineList[1].split(",")
+                        resBin = self.instOpCode[lineList[0]] + self.regs[regList[0]] + self.regs[regList[1]]
+                    elif lineList[0].startswith('j') or lineList[0] == 'call':
+                        resBin = self.instOpCode[lineList[0]]
+                        if lineList[1] in labels:
+                            resBin += self.lEndianStr(labels[lineList[1]],8)
+                        else:
+                            res += self.lEndianStr(int(lineList[1],0),8)
+                    elif lineList == 'irmovq':
+                        regList = lineList[1].split(",")
+                        if regList[0] in labels:
+                            addr = self.lEndianStr(labels[regList[0]],8)
+                        else:
+                            addr = self.lEndianStr(int(regList[0].replace('$',''),0),8)
+                        resBin = self.instOpCode[lineList[0]] + self.regs['nor'] + self.regs[regList[1]] + addr
+                    elif lineList[0].endswith("movq"):
+                        regList = lineList[1].split(",")
+                        if lineList[0] == 'rmmovq':
+                            memStr = regList[1]
+                            self.reg = regList[0]
+                        elif lineList[0] == 'mrmovq':
+                            memStr = regList[0]
+                            self.reg = regList[1]
+                        regex = re.compile('\((.+)\)')
+                        regmatch = regex.search(memStr)
+                        memInt = regex.sub('', memStr)
+                        if memInt == '' or memInt == None:
+                            memInt = '0'
+                        resBin = self.instOpCode[lineList[0]] + self.regs[self.reg] + self.regs[regmatch.group(1)] +self.lEndianStr(int(memStr,0),8)
+                    else:
+                        error += 'Line %d: Instruction "%s" not defined.\n' % (lineCount, lineList[0])
+                        continue
+                except:
+                    error += 'Line %d: Instruction error.\n' % lineCount
+                    continue
+            else:
+                try:
+                    if lineList[0] == '.pos':
+                        pass
+                    elif lineList[0] == '.align':
+                        alignment = int(lineList[1],0)
+                    elif lineList[0] in self.byteSize:
+                        if alignment != 0:
+                            length = alignment
+                        else:
+                            length = self.byteSize[lineList[0]]
+                        if lineList[1] in labels:
+                            resBin = self.lEndianStr(labels[lineList[1]], length)
+                        else:
+                            resBin = self.lEndianStr(int(lineList[1],0), length)
+                    else:
+                        error += 'Line %d: Alignment error.\n' % lineCount
+                        continue
+                except:
+                    error += 'Line %d: Alignment error.\n' % lineCount
+                    continue
+            if resBin != '':
+                yasObj[lineCount] = resBin
+            
+        # output to .yo file
+        lineCount = 0
+        binCount = 0
