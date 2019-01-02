@@ -120,6 +120,10 @@ class Y86Assmbler:
 
     # assembling Y86 code
     def assemble(self,inFile):
+        if os.path.splitext(inFile)[1] != '.ysm':
+            print('E: Input file needs to be .ysm file format\nInput file is %s' % inFile)
+            sys.exit(1)
+
         try:
             fin = open(inFile)
         except IOError:
@@ -278,7 +282,7 @@ class Y86Assmbler:
             if resBin != '':
                 yasObj[lineCount] = resBin
             
-        # output to .yo file
+        # output to .yo and .ybo file
         lineCount = 0
         binCount = 0
         maxaddrlen = 4
