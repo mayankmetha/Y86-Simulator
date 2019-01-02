@@ -9,7 +9,6 @@ class Y86Assmbler:
 
     # initalization
     def __init__(self):
-
         # registers
         self.regs = {
             "%rax": "0",
@@ -321,10 +320,5 @@ class Y86Assmbler:
                 pass
             print('Assembled file: %s' % os.path.basename(inFile))
 
-# main
-def main():
-    obj = Y86Assmbler()
-    obj.assemble(sys.argv[1])
-
 if __name__ == '__main__':
-    main()
+    obj = Y86Assmbler()
