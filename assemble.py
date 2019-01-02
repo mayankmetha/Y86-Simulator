@@ -143,7 +143,7 @@ class Y86Assmbler:
             lines = re.sub(r'/\*.*\*/','',lines)
             lines = re.sub(r'\s*,\s*',',',lines)
             if lines.find(':') != -1:
-                lab = re.compile('([^\s]+):')
+                lab = re.compile(r'([^\s]+):')
                 labmatch = lab.search(lines)
                 lines= lab.sub('',lines)
                 if labmatch != None:
@@ -242,7 +242,7 @@ class Y86Assmbler:
                         elif lineList[0] == 'mrmovq':
                             memStr = regList[0]
                             self.reg = regList[1]
-                        regex = re.compile('\((.+)\)')
+                        regex = re.compile(r'\((.+)\)')
                         regmatch = regex.search(memStr)
                         memInt = regex.sub('', memStr)
                         if memInt == '' or memInt == None:
