@@ -3,7 +3,6 @@
 import sys
 import re
 import os
-import binascii
 
 class Y86Assmbler:
 

@@ -2,7 +2,6 @@
 
 import sys
 import os
-import binascii
 
 # register names
 regName = {
@@ -279,7 +278,6 @@ def nextF():
     elif W_icode == I_RET:
         pc = W_valM
     oldPc = pc
-    pcStart = pc * 2
     imem_Error = False
     if pc == binlen:
         f_icode = I_HALT
@@ -293,23 +291,27 @@ def nextF():
     elif pc > binlen or pc < 0:
         imem_Error = True
     else:
-        imem_icode = yasBin[pcStart]
-        imem_ifun = yasBin[(pcStart+1)]
-        pcStart += 2
-        pc += 1
+        imem_icode = int(yasBin[pc])
+        imem_ifun = int(yasBin[pc+1])
     f_icode = I_NOP if imem_Error else imem_icode
     f_ifun = F_NONE if imem_Error else imem_ifun
     instr_valid = f_icode in (I_NOP, I_HALT, I_CMOV, I_IRMOV, I_RMMOV, I_MRMOV, I_OP, I_J, I_CALL, I_RET, I_PUSH, I_POP)
     if instr_valid:
         try:
             if f_icode in (I_CMOV, I_OP, I_PUSH, I_POP, I_IRMOV, I_RMMOV, I_MRMOV):
-                f_rA = R_NONE if f_rA == 0xf else int(yasBin[pcStart],16)
-                f_rB = R_NONE if f_rB == 0xf else int(yasBin[pcStart+1],16)
-                pcStart += 2
-                pc += 1
+                f_rA = R_NONE if f_rA == 0xf else int(yasBin[pc])
+                f_rB = R_NONE if f_rB == 0xf else int(yasBin[pc+1])
             else:
                 f_rA = R_NONE
                 f_rB = R_NONE
+            if f_icode in (I_HALT, I_NOP, I_RET):
+                pc += 2
+            elif f_icode in (I_IRMOV, I_MRMOV, I_RMMOV):
+                pc += 20
+            elif f_icode in (I_J, I_CALL):
+                pc += 18
+            else:
+                pc += 4
             if (f_rA not in regName.keys() and f_rB != R_NONE) or (f_rB not in regName.keys() and f_rB != R_NONE):
                 imem_Error = True
         except:
@@ -642,27 +644,18 @@ def main(file):
     global cpustat
     try:
         while True:
-            print("%x:WriteW" % cycle)
+            print("Cycle:%x" % cycle)
             writeW()
-            print("%x:NextW" % cycle)
             nextW()
-            print("%x:WriteM" % cycle)
             writeM()
-            print("%x:NextM" % cycle)
             nextM()
-            print("%x:WriteE" % cycle)
             writeE()
-            print("%x:NextE" % cycle)
             nextE()
-            print("%x:WriteD" % cycle)
             writeD()
-            print("%x:NextD" % cycle)
             nextD()
-            print("%x:WriteF" % cycle)
             writeF()
-            print("%x:NextF" % cycle)
             nextF()
-            if maxCycles != 0 and cycle > 0:
+            if maxCycles != 0 and cycle > maxCycles:
                 cpustat = 'HLT'
             if cpustat != 'AOK' and cpustat != 'BUB':
                 break
