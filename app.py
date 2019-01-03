@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from assemble import Y86Assmbler
-import processor
 import os
 import sys
 
