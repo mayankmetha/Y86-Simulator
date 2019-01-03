@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
 from assemble import Y86Assmbler
+import processor
 
-Y86Assmbler().assemble(input("Input assembly file: "))
+file = input("Input assembly file: ")
+Y86Assmbler().assemble(file)
+processor.main(file)

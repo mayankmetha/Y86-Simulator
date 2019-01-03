@@ -283,7 +283,7 @@ class Y86Assmbler:
             
         # output to .yo and .ybo file
         lineCount = 0
-        binCount = 0
+        binCount = 0x1000
         maxaddrlen = 4
         if error != '':
             self.printError(error)
