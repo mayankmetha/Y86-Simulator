@@ -1,4 +1,4 @@
-    irmovq 0x3000, %rsp
+    irmovq stack, %rsp
     irmovq rtnp,%rax
     pushq %rax          # Set up return pointer
     xorq %rax,%rax      # Set Z condition code
@@ -12,3 +12,6 @@ target:
 rtnp:
     irmovq $3,%rdx      # Should not execute this
     halt
+    .pos 0x3000
+stack:
+    nop

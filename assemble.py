@@ -173,10 +173,10 @@ class Y86Assmbler:
                     yasLineNo[lineCount] = binCount
                     binCount += self.instByte[lineList[0]]
                 elif lineList[0] == '.pos':
-                    binCount = int(lineCount[1],0)
+                    binCount = int(lineList[1],0)
                     yasLineNo[lineCount] = binCount
                 elif lineList[0] == '.align':
-                    alignment = int(lineCount[1],0)
+                    alignment = int(lineList[1],0)
                     if binCount % alignment != 0:
                         binCount += alignment - binCount % alignment
                     yasLineNo[lineCount] = binCount

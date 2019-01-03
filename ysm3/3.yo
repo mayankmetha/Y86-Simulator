@@ -1,4 +1,4 @@
-  0x1000: 30F40030000000000000 |     irmovq 0x3000, %rsp
+  0x1000: 30F40030000000000000 |     irmovq stack, %rsp
   0x100a: 30F03810000000000000 |     irmovq rtnp,%rax
   0x1014: A00F                 |     pushq %rax          # Set up return pointer
   0x1016: 6300                 |     xorq %rax,%rax      # Set Z condition code
@@ -12,3 +12,6 @@
   0x1038:                      | rtnp:
   0x1038: 30F20300000000000000 |     irmovq $3,%rdx      # Should not execute this
   0x1042: 00                   |     halt
+  0x3000:                      |     .pos 0x3000
+  0x3000:                      | stack:
+  0x3000: 10                   |     nop

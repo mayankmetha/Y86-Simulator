@@ -35,16 +35,16 @@ def opt2():
         print("E: IOError!")
         return
     binlen = len(yasBin) // 2
-    end = 0x1000 + binlen
     length = int(input("Enter number of bytes: "))
-    askEnd = start + length
-    if askEnd > end:
-        print("Invalid length")
+    if length > binlen:
+        print("E: Invalid length!")
+        return
     cnt = (start-0x1000)*2
-    while start != askEnd:
-        print(" 0x%x: %c%c" % (start,yasBin[cnt],yasBin[cnt+1]))
+    ptr = 0
+    while ptr != length:
+        print(" 0x%x: %c%c" % ((start+ptr),yasBin[cnt],yasBin[cnt+1]))
         cnt += 2
-        start += 1
+        ptr += 1
      
 
 def opt3():
