@@ -3,5 +3,5 @@
 # Authors
 ## Mayank Metha D, Sanjna Umesh
 
-# to read content of <filename>.ybo
-`od -h <filename>.ybo`
+# to execute
+`python3 app.py`

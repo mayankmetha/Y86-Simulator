@@ -6,9 +6,6 @@ import sys
 
 file = ""
 
-def opt0():
-    sys.exit(0)
-
 def opt1():
     global file
     try:
@@ -16,23 +13,28 @@ def opt1():
         Y86Assmbler().assemble(file)
     except:
         print("E: Wrong input or file doesnt exist!")
+        return
 
 def opt2():
     try:
         start = int(input("Enter start address: 0x"),16)
         if start < 0x1000:
             print("E: Invalid address!")
+            return
     except:
         print("E: Invalid input!")
+        return
     try:
         fin = open(os.path.splitext(file)[0] + '.ybo', 'rb')
     except:
         print("E: File does not exist!")
+        return
     yasBin = fin.read().hex()
     try:
         fin.close()
     except:
         print("E: IOError!")
+        return
     binlen = len(yasBin) // 2
     end = 0x1000 + binlen
     length = int(input("Enter number of bytes: "))
@@ -62,9 +64,13 @@ while True:
     print("1.Input a ysm file path")
     print("2.Show memory")
     print("3.Show program")
-    x = int(input("Select option: "))
+    global x
+    try:
+        x = int(input("Select option: "))
+    except:
+        x = -1
     if x == 0:
-        opt0()
+        sys.exit(0)
     elif x == 1:
         opt1()
     elif x == 2:
@@ -73,4 +79,3 @@ while True:
         opt3()
     else:
         print("Invalid option")
-

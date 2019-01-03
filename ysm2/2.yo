@@ -1,0 +1,15 @@
+  0x1000: 30F60100000000000000 |     irmovq $1, %rsi
+  0x100a: 30F70200000000000000 |     irmovq $2, %rdi
+  0x1014: 30F50400000000000000 |     irmovq $4, %rbp
+  0x101e: 30F0e0ffffffffffffff |     irmovq $-32, %rax
+  0x1028: 30F24000000000000000 |     irmovq $64, %rdx
+  0x1032: 6120                 |     subq %rdx,%rax
+  0x1034: 733f10000000000000   |     je target
+  0x103d: 10                   |     nop
+  0x103e: 00                   |     halt
+  0x103f:                      | target:
+  0x103f: 6062                 |     addq %rsi,%rdx
+  0x1041: 10                   |     nop
+  0x1042: 10                   |     nop
+  0x1043: 10                   |     nop
+  0x1044: 00                   |     halt
