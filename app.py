@@ -38,12 +38,11 @@ def opt2():
     end = 0x1000 + binlen
     length = int(input("Enter number of bytes: "))
     askEnd = start + length
-    print(hex(askEnd))
     if askEnd > end:
         print("Invalid length")
     cnt = (start-0x1000)*2
     while start != askEnd:
-        print("0x%x: %c%c" % (start,yasBin[cnt],yasBin[cnt+1]))
+        print(" 0x%x: %c%c" % (start,yasBin[cnt],yasBin[cnt+1]))
         cnt += 2
         start += 1
      
