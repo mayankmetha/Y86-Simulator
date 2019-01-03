@@ -303,11 +303,11 @@ class Y86Assmbler:
                     nowaddr = yasLineNo[lineCount]
                     if binCount != nowaddr:
                         tmp = '0'*(2*(nowaddr-binCount))
-                        fbout.write(binascii.a2b_hex(tmp))
+                        fbout.write(bytes.fromhex(tmp))
                         binCount = nowaddr
                     binCount += len(ystr)//2
                     fout.write('  0x%.*x: %-20s | %s' % (maxaddrlen, nowaddr, ystr, line))
-                    fbout.write(binascii.a2b_hex(ystr))
+                    fbout.write(bytes.fromhex(ystr))
                 elif lineCount in yasLineNo:
                     nowaddr = yasLineNo[lineCount]
                     fout.write('  0x%.*x:                      | %s' % (maxaddrlen, nowaddr, line))
