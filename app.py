@@ -60,11 +60,21 @@ def opt3():
 def opt4():
     singleStep = input("Do you want single step?[y/n]: ")
     if singleStep in ('y','Y','yes','Yes','YES'):
-        simulate.simulateNoPipeline(True,file)
+        sStep = True
     elif singleStep in ('n','N','no','No','NO'):
-        simulate.simulateNoPipeline(False,file)
+        sStep = False
     else:
         print("E: Invalid input!")
+    showRegs = input("Do you want to see registers?[y/n]: ")
+    if showRegs in ('y','Y','yes','Yes','YES'):
+        shRegs = True
+    elif showRegs in ('n','N','no','No','NO'):
+        shRegs = False
+    else:
+        print("E: Invalid input!")
+    restart = True
+    while restart == True:
+        restart = simulate.simulateNoPipeline(shRegs,sStep,file)
 
 while True:
     print("")

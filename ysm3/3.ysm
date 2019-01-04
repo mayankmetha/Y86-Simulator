@@ -12,6 +12,5 @@ target:
 rtnp:
     irmovq $3,%rdx      # Should not execute this
     halt
-    .pos 0x3000
 stack:
     nop

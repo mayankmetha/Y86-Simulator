@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import re
 import os
 
+# condition flags
 ccFlags = {
     'ZF': 1,
     'SF': 0,
@@ -41,6 +41,7 @@ instOpCode = {
     "B0": "popq"
 }
 
+# byte size per instruction
 instByte = {
     "00": 1,
     "10": 1,
@@ -71,36 +72,83 @@ instByte = {
     "B0": 2
 }
 
-reg = ["%rax","%rcx","%rdx","%rbx","%rsp","%rbp","%rsi","%rdi","%r8","%r9","%r10","%r11","%r12","%r13","%r14"]
-regFile = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-memDump = []
-locDump = []
-
+# convert from lEndian to int
 def lEndianInt(s):
-    x = int('%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1]),16)
-    if x > 0x7FFFFFFF:
-        x = -((~x + 1) & 0xFFFFFFFF)
+    a = '%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1])
+    b = '%c%c%c%c%c%c%c%c' % (s[14], s[15], s[12], s[13], s[10], s[11], s[8], s[9])
+    x = int('%s%s'%(b,a),16)
+    if x > 0x7FFFFFFFFFFFFFFF:
+        x = -((~x + 1) & 0xFFFFFFFFFFFFFFFF)
     return x
 
-def simulateNoPipeline(step,file):
-    pc = 0x1000
+# condition flags   
+def conditions(s):
+    zf = ccFlags['ZF']
+    sf = ccFlags['SF']
+    of = ccFlags['OF']
+    if s == 0:
+        return True
+    elif s == 1 and (sf ^ of) | zf == 1:
+        return True
+    elif s == 2 and sf ^ of == 1:
+        return True
+    elif s == 3 and zf == 1:
+        return True
+    elif s == 4 and zf == 0:
+        return True
+    elif s == 5 and sf ^ of == 0:
+        return True
+    elif s == 6 and (sf ^ of) | zf == 0:
+        return True
+    else :
+        return False
+
+# sequential pipeline
+def simulateNoPipeline(showRegs,step,file):
+    reg = ["%rax","%rcx","%rdx","%rbx","%rsp","%rbp","%rsi","%rdi","%r8","%r9","%r10","%r11","%r12","%r13","%r14"]
+    regFile = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    memDump = []
+    locDump = []
+    memory = {}
     try:
         f = os.path.splitext(file)[0] + '.ybo'
         fin = open(f,'r')
     except IOError:
         print('Error: cannot open file')
         sys.exit(1)
-    cycle = 0
+    x = 0x1000
     for line in fin:
+        if line != '':
+            locDump.append(x)
+            memDump.append(line.strip('\n'))
+            x += instByte[line[0:2]]
+    try:
+        fin.close()
+    except:
+        pass
+    index = 0
+    cycle = 0
+    regFile[reg.index("%rsp")] = 0x3000
+    while index < len(memDump):
+        line = memDump[index]
         print("Cycle: %s"%cycle)
         cycle += 1
         inst = instOpCode[line[0:2]]
-        print("\tPC: 0x%x Instruction: %s"%(pc,inst))
+        print("\tPC: 0x%x Instruction: %s"%(locDump[index],inst))
         if line[0] in ('2','3','4','5','6','A','B'):
             rA = int(line[2],16)
             rB = int(line[3],16)
-        if int(line[0],16) == 2:
-            regFile[rB] = regFile[rA]
+        if int(line[0],16) == 0:
+            if showRegs == True:
+                for i in range(len(reg)):
+                    print("\t%s:0x%x"%(reg[i],regFile[i]))
+                print("\tZF=%s"%ccFlags['ZF'])
+                print("\tSF=%s"%ccFlags['SF'])
+                print("\tOF=%s"%ccFlags['OF'])
+            return
+        elif int(line[0],16) == 2:
+            if conditions(int(line[1],16)) == True:
+                regFile[rB] = regFile[rA]
         elif int(line[0],16) == 3:
             regFile[rB] = lEndianInt(line[4:21])
         elif int(line[0],16) == 6:
@@ -122,23 +170,54 @@ def simulateNoPipeline(step,file):
             if opp == 2 and ((regFile[rB] > 0 and regFile[rA] < 0 and alures < 0) and (regFile[rB] < 0 and regFile[rA] > 0 and alures > 0)):
                 ccFlags['OF'] = 1
             regFile[rB] = alures
-        if int(line[0],16) == 8:
-            pc = lEndianInt(line[4:])
+        elif int(line[0],16) == 0xA:
+            memory[regFile[reg.index("%rsp")]] = regFile[rA]
+            regFile[reg.index("%rsp")] -= 8
+        elif int(line[0],16) == 0xB:
+            if regFile[reg.index("%rsp")] + 8 > 0x3000:
+                pass
+            else:
+                regFile[rA] = memory[regFile[reg.index("%rsp")]]
+                memory.pop(regFile[reg.index("%rsp")])
+                regFile[reg.index("%rsp")] += 8
+        if int(line[0],16) == 9:
+            if regFile[reg.index("%rsp")] + 8 > 0x3000:
+                if showRegs == True:
+                    for i in range(len(reg)):
+                        print("\t%s:0x%x"%(reg[i],regFile[i]))
+                    print("\tZF=%s"%ccFlags['ZF'])
+                    print("\tSF=%s"%ccFlags['SF'])
+                    print("\tOF=%s"%ccFlags['OF'])
+                return
+            else:
+                index = memory[regFile[reg.index("%rsp")]]
+                memory.pop(regFile[reg.index("%rsp")])
+                regFile[reg.index("%rsp")] += 8
+        elif int(line[0],16) == 8:
+            memory[regFile[reg.index("%rsp")]] = locDump[index+1]
+            regFile[reg.index("%rsp")] -= 8
+            index = locDump.index(lEndianInt(line[2:]))
         elif int(line[0],16) == 7:
-            pc = lEndianInt(line[4:])
+            if conditions(int(line[1],16)) == True:
+                index = locDump.index(lEndianInt(line[2:]))
+            else:
+                index +=1
         else:
-            pc = pc + instByte[line[0:2]]
+            index += 1
         
-        for i in range(len(reg)):
-            print("\t%s:%s"%(reg[i],regFile[i]))
-        print("\tZF=%s"%ccFlags['ZF'])
-        print("\tSF=%s"%ccFlags['SF'])
-        print("\tOF=%s"%ccFlags['OF'])
+        if showRegs == True:
+            for i in range(len(reg)):
+                print("\t%s:0x%x"%(reg[i],regFile[i]))
+            print("\tZF=%s"%ccFlags['ZF'])
+            print("\tSF=%s"%ccFlags['SF'])
+            print("\tOF=%s"%ccFlags['OF'])
         
         if step == True:
-            input("Enter a key to continue: ")
+            key = input("Enter a r to restart else any other key to continue: ")
 
-    try:
-        fin.close()
-    except:
-        pass
+        if key in ('r','R'):
+            print("Restarting execution")
+            return True
+            
+    return False
+        
