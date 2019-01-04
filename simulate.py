@@ -77,9 +77,9 @@ memDump = []
 locDump = []
 
 def lEndianInt(s):
-    x = int('%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1]))
-    if x > 0x7fffffff:
-        x = -((~x + 1) & 0xffffffff)
+    x = int('%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1]),16)
+    if x > 0x7FFFFFFF:
+        x = -((~x + 1) & 0xFFFFFFFF)
     return x
 
 def simulateNoPipeline(step,file):
@@ -99,12 +99,12 @@ def simulateNoPipeline(step,file):
         if line[0] in ('2','3','4','5','6','A','B'):
             rA = int(line[2],16)
             rB = int(line[3],16)
-        if int(line[0]) == 2:
+        if int(line[0],16) == 2:
             regFile[rB] = regFile[rA]
-        elif int(line[0]) == 3:
+        elif int(line[0],16) == 3:
             regFile[rB] = lEndianInt(line[4:21])
-        elif int(line[0]) == 6:
-            opp = int(line[1])
+        elif int(line[0],16) == 6:
+            opp = int(line[1],16)
             alures = regFile[rB]
             if opp == 0:
                 alures = regFile[rB]+regFile[rA]
@@ -122,9 +122,9 @@ def simulateNoPipeline(step,file):
             if opp == 2 and ((regFile[rB] > 0 and regFile[rA] < 0 and alures < 0) and (regFile[rB] < 0 and regFile[rA] > 0 and alures > 0)):
                 ccFlags['OF'] = 1
             regFile[rB] = alures
-        if int(line[0]) == 8:
+        if int(line[0],16) == 8:
             pc = lEndianInt(line[4:])
-        elif int(line[0]) == 7:
+        elif int(line[0],16) == 7:
             pc = lEndianInt(line[4:])
         else:
             pc = pc + instByte[line[0:2]]
