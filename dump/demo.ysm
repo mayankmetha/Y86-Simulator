@@ -1,0 +1,2 @@
+irmovq $1, %r8              # Constant 1
+irmovq $8, %r9              # Constant 8

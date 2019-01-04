@@ -246,11 +246,9 @@ def logger(str):
 
 # convert little endiam characters to int
 def lEndianInt(s):
-    a = '%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1])
-    b = '%c%c%c%c%c%c%c%c' % (s[14], s[15], s[12], s[13], s[10], s[11], s[8], s[9])
-    x = int('%s%s' % (b, a), 16)
-    if x > 0x7fffffffffffffff:
-        x = -((~x + 1) & 0xffffffffffffffff)
+    x = int('%c%c%c%c%c%c%c%c' % (s[6], s[7], s[4], s[5], s[2], s[3], s[0], s[1]))
+    if x > 0x7fffffff:
+        x = -((~x + 1) & 0xffffffff)
     return x
 
 # write to pipeline F reg
@@ -299,8 +297,12 @@ def nextF():
     if instr_valid:
         try:
             if f_icode in (I_CMOV, I_OP, I_PUSH, I_POP, I_IRMOV, I_RMMOV, I_MRMOV):
-                f_rA = R_NONE if f_rA == 0xf else int(yasBin[pc])
-                f_rB = R_NONE if f_rB == 0xf else int(yasBin[pc+1])
+                f_rA = int(yasBin[pc])
+                f_rB = int(yasBin[pc+1])
+                if f_rA == 0xf:
+                    f_rA = R_NONE
+                if f_rB == 0xf:
+                    f_rB = R_NONE
             else:
                 f_rA = R_NONE
                 f_rB = R_NONE
@@ -372,6 +374,7 @@ def nextD():
     global d_dstM
     global d_valA
     global d_valB
+    print("Dicode=",D_icode)
     d_srcA = R_NONE
     if D_icode in (I_CMOV, I_RMMOV, I_OP, I_PUSH):
         d_srcA = D_rA
@@ -412,6 +415,7 @@ def nextD():
         d_valB = W_valM
     elif d_srcB == W_dstE:
         d_valB = W_valE
+    print("\tDecode: dsrcA =",d_srcA," d_srcB = ",d_srcB," d_dstE = ",d_dstE," d_dstM = ",d_dstM," d_valA = ",d_valA," d_valB = ",d_valB)
 
 # write to pipeline E reg
 def writeE():

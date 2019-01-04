@@ -288,10 +288,12 @@ class Y86Assmbler:
             self.printError(error)
         else:
             outFile = os.path.splitext(inFile)[0] + '.yo'
-            outBinFile = os.path.splitext(inFile)[0] + '.ybo'
+            outBinFile = os.path.splitext(inFile)[0] + '.yb'
+            outInsFile = os.path.splitext(inFile)[0] + '.ybo'
             try:
                 fout = open(outFile,'w')
                 fbout = open(outBinFile,'wb')
+                fiout = open(outInsFile,'w')
             except IOError:
                 print('Error: cannot create output file')
                 sys.exit(1)
@@ -307,6 +309,7 @@ class Y86Assmbler:
                     binCount += len(ystr)//2
                     fout.write('  0x%.*x: %-20s | %s' % (maxaddrlen, nowaddr, ystr, line))
                     fbout.write(bytes.fromhex(ystr))
+                    fiout.write('%s\n'%ystr)
                 elif lineCount in yasLineNo:
                     nowaddr = yasLineNo[lineCount]
                     fout.write('  0x%.*x:                      | %s' % (maxaddrlen, nowaddr, line))
@@ -315,6 +318,7 @@ class Y86Assmbler:
             try:
                 fout.close()
                 fbout.close()
+                fiout.close()
             except IOError:
                 pass
             print('Assembled file: %s' % os.path.basename(inFile))

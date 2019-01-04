@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from assemble import Y86Assmbler
+import simulate
 import os
 import sys
 
@@ -24,7 +25,7 @@ def opt2():
         print("E: Invalid input!")
         return
     try:
-        fin = open(os.path.splitext(file)[0] + '.ybo', 'rb')
+        fin = open(os.path.splitext(file)[0] + '.yb', 'rb')
     except:
         print("E: File does not exist!")
         return
@@ -56,12 +57,22 @@ def opt3():
     except:
         print("E: File error!")
 
+def opt4():
+    singleStep = input("Do you want single step?[y/n]: ")
+    if singleStep in ('y','Y','yes','Yes','YES'):
+        simulate.simulateNoPipeline(True,file)
+    elif singleStep in ('n','N','no','No','NO'):
+        simulate.simulateNoPipeline(False,file)
+    else:
+        print("E: Invalid input!")
+
 while True:
     print("")
     print("0.Exit")
     print("1.Input a ysm file path")
     print("2.Show memory")
     print("3.Show program")
+    print("4.Show execution")
     global x
     try:
         x = int(input("Select option: "))
@@ -75,5 +86,7 @@ while True:
         opt2()
     elif x == 3:
         opt3()
+    elif x == 4:
+        opt4()
     else:
         print("Invalid option")
