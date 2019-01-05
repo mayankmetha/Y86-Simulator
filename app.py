@@ -72,9 +72,13 @@ def opt4():
         shRegs = False
     else:
         print("E: Invalid input!")
+    try:
+        inCount = int(input("Enter number of execution required or enter -1 to ignore: "))
+    except:
+        print("E: Invalid input!")
     restart = True
     while restart == True:
-        restart = simulate.simulateNoPipeline(shRegs,sStep,file)
+        restart = simulate.simulateNoPipeline(inCount,shRegs,sStep,file)
 
 while True:
     print("")

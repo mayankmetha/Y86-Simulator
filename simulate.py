@@ -103,8 +103,16 @@ def conditions(s):
     else :
         return False
 
+def validateInCount(count):
+    if count == -1:
+        return True
+    elif count == 0:
+        return False
+    else:
+        return True
+
 # sequential pipeline
-def simulateNoPipeline(showRegs,step,file):
+def simulateNoPipeline(inCount, showRegs,step,file):
     reg = ["%rax","%rcx","%rdx","%rbx","%rsp","%rbp","%rsi","%rdi","%r8","%r9","%r10","%r11","%r12","%r13","%r14"]
     regFile = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     memDump = []
@@ -129,9 +137,13 @@ def simulateNoPipeline(showRegs,step,file):
     index = 0
     cycle = 0
     regFile[reg.index("%rsp")] = 0x3000
-    while index < len(memDump):
+    while index < len(memDump) and cycle < 64:
+        if validateInCount(inCount) == False:
+            return False
+        else:
+            inCount -= 1
         line = memDump[index]
-        print("Cycle: %s"%cycle)
+        print("Instruction: %s"%cycle)
         cycle += 1
         inst = instOpCode[line[0:2]]
         print("\tPC: 0x%x Instruction: %s"%(locDump[index],inst))
@@ -214,10 +226,11 @@ def simulateNoPipeline(showRegs,step,file):
         
         if step == True:
             key = input("Enter a r to restart else any other key to continue: ")
-
-        if key in ('r','R'):
-            print("Restarting execution")
-            return True
+            if key in ('r','R'):
+                print("Restarting execution")
+                return True
+            else: 
+                pass
             
     return False
         
