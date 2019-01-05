@@ -143,20 +143,22 @@ def simulateNoPipeline(inCount, showRegs,step,file):
         else:
             inCount -= 1
         line = memDump[index]
-        print("Instruction: %s"%cycle)
+        print("Instruction Count: %s"%cycle)
         cycle += 1
         inst = instOpCode[line[0:2]]
-        print("\tPC: 0x%x Instruction: %s"%(locDump[index],inst))
+        print("\tPC: 0x%x\n\tInstruction: %s"%(locDump[index],inst))
         if line[0] in ('2','3','4','5','6','A','B'):
             rA = int(line[2],16)
             rB = int(line[3],16)
         if int(line[0],16) == 0:
             if showRegs == True:
+                print("\tRegisters:")
                 for i in range(len(reg)):
-                    print("\t%s:0x%x"%(reg[i],regFile[i]))
-                print("\tZF=%s"%ccFlags['ZF'])
-                print("\tSF=%s"%ccFlags['SF'])
-                print("\tOF=%s"%ccFlags['OF'])
+                    print("\t\t%s:0x%x"%(reg[i],regFile[i]))
+                print("\tConditional Flags:")
+                print("\t\tZF=%s"%ccFlags['ZF'])
+                print("\t\tSF=%s"%ccFlags['SF'])
+                print("\t\tOF=%s"%ccFlags['OF'])
             return
         elif int(line[0],16) == 2:
             if conditions(int(line[1],16)) == True:
@@ -195,11 +197,13 @@ def simulateNoPipeline(inCount, showRegs,step,file):
         if int(line[0],16) == 9:
             if regFile[reg.index("%rsp")] + 8 > 0x3000:
                 if showRegs == True:
+                    print("\tRegisters:")
                     for i in range(len(reg)):
-                        print("\t%s:0x%x"%(reg[i],regFile[i]))
-                    print("\tZF=%s"%ccFlags['ZF'])
-                    print("\tSF=%s"%ccFlags['SF'])
-                    print("\tOF=%s"%ccFlags['OF'])
+                        print("\t\t%s:0x%x"%(reg[i],regFile[i]))
+                    print("\tConditional Flags:")
+                    print("\t\tZF=%s"%ccFlags['ZF'])
+                    print("\t\tSF=%s"%ccFlags['SF'])
+                    print("\t\tOF=%s"%ccFlags['OF'])
                 return
             else:
                 index = memory[regFile[reg.index("%rsp")]]
@@ -218,11 +222,13 @@ def simulateNoPipeline(inCount, showRegs,step,file):
             index += 1
         
         if showRegs == True:
+            print("\tRegisters:")
             for i in range(len(reg)):
-                print("\t%s:0x%x"%(reg[i],regFile[i]))
-            print("\tZF=%s"%ccFlags['ZF'])
-            print("\tSF=%s"%ccFlags['SF'])
-            print("\tOF=%s"%ccFlags['OF'])
+                print("\t\t%s:0x%x"%(reg[i],regFile[i]))
+            print("\tConditional Flags:")
+            print("\t\tZF=%s"%ccFlags['ZF'])
+            print("\t\tSF=%s"%ccFlags['SF'])
+            print("\t\tOF=%s"%ccFlags['OF'])
         
         if step == True:
             key = input("Enter a r to restart else any other key to continue: ")

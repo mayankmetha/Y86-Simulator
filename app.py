@@ -65,7 +65,7 @@ def opt4():
         sStep = False
     else:
         print("E: Invalid input!")
-    showRegs = input("Do you want to see registers?[y/n]: ")
+    showRegs = input("Do you want to see registers and conditional flags?[y/n]: ")
     if showRegs in ('y','Y','yes','Yes','YES'):
         shRegs = True
     elif showRegs in ('n','N','no','No','NO'):
